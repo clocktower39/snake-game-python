@@ -4,6 +4,9 @@ import time
 import random
 
 SIZE = 40
+WINDOW_WIDTH = 1000
+WINDOW_HEIGHT = 800
+SPEED = 0.3
 
 class Apple:
     def __init__(self, parent_screen):
@@ -59,25 +62,47 @@ class Snake:
             self.x[i] = self.x[i -1]
             self.y[i] = self.y[i -1]
 
-        if(self.direction) == 'up':
-            self.y[0] -= SIZE
-        if(self.direction) == 'down':
-            self.y[0] += SIZE
-        if(self.direction) == 'left':
-            self.x[0] -= SIZE
-        if(self.direction) == 'right':
-            self.x[0] += SIZE
+        if self.direction == 'up':
+            if self.y[0] == 0:
+                self.y[0] = WINDOW_HEIGHT - SIZE
+            else:
+                self.y[0] -= SIZE
+
+        if self.direction == 'down':
+            if self.y[0] == WINDOW_HEIGHT - SIZE:
+                self.y[0] = 0
+            else:
+                self.y[0] += SIZE
+
+        if self.direction == 'left':
+            if self.x[0] == 0:
+                self.x[0] = WINDOW_WIDTH - SIZE
+            else:
+                self.x[0] -= SIZE
+
+        if self.direction == 'right':
+            if self.x[0] == WINDOW_WIDTH - SIZE:
+                self.x[0] = 0
+            else:
+                self.x[0] += SIZE
+
         self.draw()
 
 class Game: 
     def __init__(self):
         pygame.init()
-        self.surface = pygame.display.set_mode((1000, 800))
+        self.surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.surface.fill((110, 110, 5))
         self.snake = Snake(self.surface, 1)
         self.snake.draw()
         self.apple = Apple(self.surface)
         self.apple.draw()
+        self.speed = SPEED
+
+    def reset(self):
+        self.snake = Snake(self.surface, 1)
+        self.apple = Apple(self.surface)
+        self.speed = SPEED        
 
     def display_score(self):
         font = pygame.font.SysFont('arial',30)
@@ -99,9 +124,26 @@ class Game:
         if self.is_collision(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
             self.snake.increment_length()
             self.apple.move()
+            self.speed *= 0.9
+
+        for i in range(1, self.snake.length):
+            if self.is_collision(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
+                raise "Game over"
+
+    def show_game_over(self):
+        self.surface.fill(((110,110,5)))
+        font = pygame.font.SysFont('arial',30)
+        line1 = font.render(f"Game over. Your score is {self.snake.length}", True, (255, 255, 255))
+        line2 = font.render(f"To play again press Enter", True, (255, 255, 255))
+        line3 = font.render(f"To exit press Esc", True, (255, 255, 255))
+        self.surface.blit(line1, (350, 300))
+        self.surface.blit(line2, (350, 350))
+        self.surface.blit(line3, (350, 400))
+        pygame.display.flip()
 
     def run(self):
         running = True
+        pause = False
 
         while running:
             for event in pygame.event.get():
@@ -109,20 +151,29 @@ class Game:
                     if event.key == K_ESCAPE:
                         running = False
 
-                    if event.key == K_LEFT:
-                        self.snake.move_left()
-                    if event.key == K_RIGHT:
-                        self.snake.move_right()
-                    if event.key == K_UP:
-                        self.snake.move_up()
-                    if event.key == K_DOWN:
-                        self.snake.move_down()
+                    if event.key ==K_RETURN:
+                        pause = False
+
+                    if not pause:
+                        if event.key == K_LEFT:
+                            self.snake.move_left()
+                        if event.key == K_RIGHT:
+                            self.snake.move_right()
+                        if event.key == K_UP:
+                            self.snake.move_up()
+                        if event.key == K_DOWN:
+                            self.snake.move_down()
 
                 elif event.type == QUIT:
                     running = False
-
-            self.play()
-            time.sleep(0.3)
+            try:
+                if not pause:
+                    self.play()
+            except Exception as e:
+                self.show_game_over()
+                pause = True
+                self.reset()
+            time.sleep(self.speed)
 
 
 if __name__ == "__main__":
