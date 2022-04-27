@@ -10,20 +10,20 @@ class Game:
         pygame.init()
         self.surface = pygame.display.set_mode((settings.WINDOW_WIDTH, settings.WINDOW_HEIGHT))
         self.surface.fill((110, 110, 5))
-        self.snake = Snake(self.surface, 1)
+        self.snake = Snake(self.surface, settings.SNAKE_START_LENGTH)
         self.snake.draw()
         self.apple = Apple(self.surface)
         self.apple.draw()
         self.speed = settings.SPEED
 
     def reset(self):
-        self.snake = Snake(self.surface, 1)
+        self.snake = Snake(self.surface, settings.SNAKE_START_LENGTH)
         self.apple = Apple(self.surface)
         self.speed = settings.SPEED        
 
     def display_score(self):
         font = pygame.font.SysFont('arial',30)
-        score = font.render(f"Score: {self.snake.length}", True, (255, 255, 255))
+        score = font.render(f"Score: {self.snake.length - settings.SNAKE_START_LENGTH}", True, (255, 255, 255))
         self.surface.blit(score, (800, 10))
 
     def is_collision(self, x1, y1, x2, y2):
@@ -49,7 +49,7 @@ class Game:
     def show_game_over(self):
         self.surface.fill(((110,110,5)))
         font = pygame.font.SysFont('arial',30)
-        line1 = font.render(f"Game over. Your score is {self.snake.length}", True, (255, 255, 255))
+        line1 = font.render(f"Game over. Your score is {self.snake.length - settings.SNAKE_START_LENGTH}", True, (255, 255, 255))
         line2 = font.render(f"To play again press Enter", True, (255, 255, 255))
         line3 = font.render(f"To exit press Esc", True, (255, 255, 255))
         self.surface.blit(line1, (350, 300))
@@ -72,13 +72,17 @@ class Game:
 
                     if not pause:
                         if event.key == K_LEFT:
-                            self.snake.move_left()
+                            if self.snake.direction != 'right':
+                                self.snake.move_left()
                         if event.key == K_RIGHT:
-                            self.snake.move_right()
+                            if self.snake.direction != 'left':
+                                self.snake.move_right()
                         if event.key == K_UP:
-                            self.snake.move_up()
+                            if self.snake.direction != 'down':
+                                self.snake.move_up()
                         if event.key == K_DOWN:
-                            self.snake.move_down()
+                            if self.snake.direction != 'up':
+                                self.snake.move_down()
 
                 elif event.type == QUIT:
                     running = False
